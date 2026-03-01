@@ -14,9 +14,9 @@ const subscriptionSchema = new mongoose.Schema({
         min: [0, 'Subscription Price must be greater than 0'],
     },
     currency :{
-        type: Number,
+        type: String,
         enum: ['USD', 'EUR', 'GBP', 'INR'],
-        default: 'IND',
+        default: 'INR',
     },
     frequency:{
         type: String,
@@ -38,17 +38,19 @@ const subscriptionSchema = new mongoose.Schema({
         default: 'active',
     },
     startDate: {
-        type: Date,
+        type: Date, // date be like "2024-01-15"
         required: [true, 'Subscription StartDate is required'],
         validate: {
-            validator: (value) => value<= Date(),
+            validator: (value) => value<= new Date(),
             message: 'Subscription StartDate must be in past',
         }
     },
     renewalDate: {
         type: Date,
         validate: {
-            validator: (value) => value > this.startDate,
+            validator: function (value) {
+                return value > this.startDate;
+            } ,
             message: 'Subscription Renewal must be after start date',
         }
     },
@@ -66,7 +68,7 @@ subscriptionSchema.pre('save', function (next) {
             daily: 1,
             weekly: 7,
             monthly: 30,
-            yearly: 4,
+            yearly: 365,
         }
 
         this.renewalDate = new Date(this.startDate);
@@ -77,7 +79,6 @@ subscriptionSchema.pre('save', function (next) {
         this.status = 'expired';
     }
 
-    next();
 });
 
 const Subscription = mongoose.model("Subscription", subscriptionSchema);
